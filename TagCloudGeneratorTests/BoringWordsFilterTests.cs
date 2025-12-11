@@ -1,36 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using System.Linq;
+﻿using NUnit.Framework;
 using TagCloudGenerator.Infrastructure.Filters;
 
 namespace TagCloudGeneratorTests
 {
     public class BoringWordsFilterTests
     {
-        private BoringWordsFilter filter;
-
-        [SetUp]
-        public void Setup()
-        {
-            filter = new BoringWordsFilter();
-        }
+        private BoringWordsFilter filter = new BoringWordsFilter();
 
         [Test]
         public void Filter_EmptyInput_ReturnsEmpty()
         {
-            var words = Enumerable.Empty<string>();
+            var words = new List<string>();
             var result = filter.Filter(words);
             Assert.That(result, Is.Empty);
         }
 
         [Test]
-        public void Filter_RemovesBoringWords()
+        public void Filter_RemovesBoringWords_Test()
         {
-            var words = new[] { "hello", "in", "world", "a", "test" };
+            var words = new List<string> { "hello", "in", "world", "a", "test" };
             var result = filter.Filter(words).ToList();
 
             Assert.That(result.Count, Is.EqualTo(3));
@@ -42,17 +30,17 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void Filter_AllBoringWords_ReturnsEmpty()
+        public void Filter_AllBoringWords_ReturnsEmpty_Test()
         {
-            var words = new[] { "in", "a", "for", "on" };
+            var words = new List<string>  { "in", "a", "for", "on" };
             var result = filter.Filter(words);
             Assert.That(result, Is.Empty);
         }
 
         [Test]
-        public void Filter_NoBoringWords_ReturnsAllWords()
+        public void Filter_NoBoringWords_ReturnsAllWords_Test()
         {
-            var words = new[] { "hello", "world", "test" };
+            var words = new List<string> { "hello", "world", "test" };
             var result = filter.Filter(words).ToList();
 
             Assert.That(result.Count, Is.EqualTo(3));
@@ -60,9 +48,9 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void ShouldInclude_ReturnsFalseForBoringWords()
+        public void ShouldInclude_ReturnsFalseForBoringWords_Test()
         {
-            var boringWords = new[] { "in", "it", "a", "as", "for", "of", "on" };
+            var boringWords = new List<string> { "in", "it", "a", "as", "for", "of", "on" };
             foreach (var word in boringWords)
             {
                 Assert.That(filter.ShouldInclude(word), Is.False);
@@ -70,9 +58,9 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void ShouldInclude_ReturnsTrueForNormalWords()
+        public void ShouldInclude_ReturnsTrueForNormalWords_Test()
         {
-            var normalWords = new[] { "hello", "world", "computer", "programming", "test" };
+            var normalWords = new List<string> { "hello", "world", "computer", "programming", "test" };
             foreach (var word in normalWords)
             {
                 Assert.That(filter.ShouldInclude(word), Is.True);
@@ -80,9 +68,9 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void Filter_PreservesOrder()
+        public void Filter_PreservesOrder_Test()
         {
-            var words = new[] { "hello", "in", "world", "a", "test", "for" };
+            var words = new List<string> { "hello", "in", "world", "a", "test", "for" };
             var result = filter.Filter(words).ToList();
 
             Assert.That(result.Count, Is.EqualTo(3));

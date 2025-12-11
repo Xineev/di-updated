@@ -1,14 +1,7 @@
 ﻿using Autofac;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TagCloudGenerator.Algorithms;
 using TagCloudGenerator.Clients;
 using TagCloudGenerator.Core.Interfaces;
-using TagCloudGenerator.Core.Models;
 using TagCloudGenerator.Core.Services;
 using TagCloudGenerator.Infrastructure.Analyzers;
 using TagCloudGenerator.Infrastructure.Calculators;
@@ -26,13 +19,12 @@ namespace TagCloudGenerator.DI
             builder.RegisterType<LineTextReader>().As<IReader>();
 
             builder.RegisterType<BoringWordsFilter>().As<IFilter>();
+            builder.RegisterType<ToLowerCaseFilter>().As<IFilter>();
 
             builder.RegisterType<BasicTagCloudAlgorithm>().As<ITagCloudAlgorithm>();
 
             builder.RegisterType<LinearFontSizeCalculator>()
-               .As<IFontSizeCalculator>()
-               .WithParameter("minFontSize", 12f)
-               .WithParameter("maxFontSize", 72f);
+               .As<IFontSizeCalculator>();
 
             builder.RegisterType<GraphicsTextMeasurer>()
                .As<ITextMeasurer>();

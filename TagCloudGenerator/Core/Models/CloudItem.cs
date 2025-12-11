@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TagCloudGenerator.Core.Interfaces;
+﻿using System.Drawing;
 
 namespace TagCloudGenerator.Core.Models
 {
-    public class CloudItem : ICloudItem
+    public class CloudItem
     {
         public string Word { get; }
         public Rectangle Rectangle { get; }
@@ -37,11 +31,6 @@ namespace TagCloudGenerator.Core.Models
             FontStyle = fontStyle;
             Frequency = frequency;
             Weight = weight;
-        }
-
-        public static CloudItem Create(string word, Rectangle rectangle, float fontSize)
-        {
-            return new CloudItem(word, rectangle, fontSize);
         }
 
         public CloudItem WithRectangle(Rectangle newRectangle)

@@ -1,46 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
-using System.IO;
 
 namespace TagCloudGenerator.Infrastructure.Renderers
 {
     public class PngRenderer : IRenderer
     {
-        public void Render(IEnumerable<CloudItem> items, RenderSettings settings)
+        public void Render(IEnumerable<CloudItem> items, CanvasSettings canvasSettings, TextSettings textSettings, string outputFile)
         {
             var itemsList = items.ToList();
-            if (!itemsList.Any())
+            if (items.Count() == 0)
             {
                 Console.WriteLine("No elements to render");
                 return;
             }
 
-            using var bitmap = new Bitmap(settings.CanvasSize.Width, settings.CanvasSize.Height);
+            using var bitmap = new Bitmap(canvasSettings.CanvasSize.Width, canvasSettings.CanvasSize.Height);
             using var graphics = Graphics.FromImage(bitmap);
 
             ConfigureGraphics(graphics);
-            graphics.Clear(settings.BackgroundColor);
+            graphics.Clear(canvasSettings.BackgroundColor);
 
-            var (offsetX, offsetY) = CalculateOffset(itemsList, settings);
+            var (offsetX, offsetY) = CalculateOffset(itemsList, canvasSettings);
 
+
+            using var brush = new SolidBrush(textSettings.TextColor);
+            using var stringFormat = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            using var pen = new Pen(textSettings.TextColor, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash };
             foreach (var item in itemsList)
             {
-                DrawCloudItem(graphics, item, offsetX, offsetY, settings);
+                DrawCloudItem(graphics, item, offsetX, offsetY, canvasSettings, textSettings, brush, pen, stringFormat);
             }
 
-            bitmap.Save(settings.OutputPath, ImageFormat.Png);
+            bitmap.Save(outputFile, ImageFormat.Png);
         }
 
         private (int offsetX, int offsetY) CalculateOffset(
             List<CloudItem> items,
-            RenderSettings settings)
+            CanvasSettings settings)
         {
             if (!settings.CenterCloud)
                 return (settings.Padding, settings.Padding);
@@ -64,7 +62,11 @@ namespace TagCloudGenerator.Infrastructure.Renderers
             CloudItem item,
             int offsetX,
             int offsetY,
-            RenderSettings settings)
+            CanvasSettings canvasSettings,
+            TextSettings textSettings,
+            SolidBrush brush,
+            Pen pen,
+            StringFormat stringFormat)
         {
             var drawRect = new Rectangle(
                 item.Rectangle.X + offsetX,
@@ -72,7 +74,7 @@ namespace TagCloudGenerator.Infrastructure.Renderers
                 item.Rectangle.Width,
                 item.Rectangle.Height);
 
-            var color = item.Color ?? settings.TextColor;
+            var color = item.Color ?? textSettings.TextColor;
 
             using var font = new Font(
                 item.FontFamily,
@@ -80,18 +82,10 @@ namespace TagCloudGenerator.Infrastructure.Renderers
                 item.FontStyle,
                 GraphicsUnit.Pixel);
 
-            using var brush = new SolidBrush(color);
-            using var stringFormat = new StringFormat
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
-
             graphics.DrawString(item.Word, font, brush, drawRect, stringFormat);
 
-            if (settings.ShowRectangles)
+            if (canvasSettings.ShowRectangles)
             {
-                using var pen = new Pen(color, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash };
                 graphics.DrawRectangle(pen, drawRect);
             }
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
 
@@ -38,32 +33,27 @@ namespace TagCloudGenerator.Core.Services
             _center = new Point(0, 0);
         }
 
-        public void Generate(string inputFile, string outputFile, RenderSettings renderSettings)
+        public void Generate(string inputFile, string outputFile, CanvasSettings canvasSettings, TextSettings textSettings)
         {
-            var words = _reader.TryRead(inputFile);
-            if (words == null || !words.Any())
-            {
+            var words = _reader.TryRead(inputFile).ToList();
+            
+            if (words == null || words.Count == 0)
                 return;
-            }
 
             words = ApplyFilters(words);
-            if (!words.Any())
-            {
+            if(words.Count == 0)
                 return;
-            }
 
             var cloudItems = _analyzer.Analyze(words).ToList();
 
-            var preparedItems = PrepareCloudItems(cloudItems, renderSettings).ToList();
+            var preparedItems = PrepareCloudItems(cloudItems, textSettings).ToList();
 
             var arrangedItems = ArrangeCloudItems(preparedItems).ToList();
 
-            renderSettings.OutputPath = outputFile;
-
-            _renderer.Render(arrangedItems, renderSettings);
+            _renderer.Render(arrangedItems, canvasSettings, textSettings, outputFile);
         }
 
-        private IEnumerable<string> ApplyFilters(IEnumerable<string> words)
+        private List<string> ApplyFilters(List<string> words)
         {
             var filteredWords = words;
             foreach (var filter in _filters)
@@ -73,17 +63,15 @@ namespace TagCloudGenerator.Core.Services
             return filteredWords;
         }
 
-        private IEnumerable<CloudItem> PrepareCloudItems(IEnumerable<CloudItem> items, RenderSettings settings)
+        private IEnumerable<CloudItem> PrepareCloudItems(IEnumerable<CloudItem> items, TextSettings settings)
         {
-            var itemsList = items.ToList();
-            var frequencies = itemsList.Select(i => i.Frequency).ToList();
-            var minFrequency = frequencies.Min();
-            var maxFrequency = frequencies.Max();
+            var itemsList = new List<CloudItem>();
 
-            for (int i = 0; i < itemsList.Count; i++)
+            var minFrequency = items.Min(i => i.Frequency);
+            var maxFrequency = items.Max(i => i.Frequency);
+
+            foreach (var item in items)
             {
-                var item = itemsList[i];
-
                 var fontSize = _fontSizeCalculator.Calculate(
                     item.Frequency,
                     minFrequency,
@@ -96,26 +84,24 @@ namespace TagCloudGenerator.Core.Services
                     fontSize,
                     settings.FontFamily);
 
-                yield return new CloudItem(
-                    word: item.Word,
-                    rectangle: new Rectangle(Point.Empty, textSize),
-                    fontSize: fontSize,
-                    color: settings.TextColor,
-                    fontFamily: settings.FontFamily,
-                    frequency: item.Frequency,
-                    weight: item.Weight
-                );
+                itemsList.Add(
+                    new CloudItem(
+                        word: item.Word,
+                        rectangle: new Rectangle(Point.Empty, textSize),
+                        fontSize: fontSize,
+                        color: settings.TextColor,
+                        fontFamily: settings.FontFamily,
+                        frequency: item.Frequency,
+                        weight: item.Weight
+                        ));
             }
+            return itemsList;
         }
 
-        private IEnumerable<CloudItem> ArrangeCloudItems(IEnumerable<CloudItem> items)
+        private List<CloudItem> ArrangeCloudItems(List<CloudItem> items)
         {
-
-            foreach (var item in items)
-            {
-               var newRectangle = _algorithm.PutNextRectangle(item.Rectangle.Size);
-                yield return item.WithRectangle(newRectangle);
-            }
+            return items.Select(item => item.WithRectangle(_algorithm.PutNextRectangle(item.Rectangle.Size)))
+                .ToList();
         }
     }
 }

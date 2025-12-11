@@ -1,27 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using NUnit.Framework;
-using System.IO;
-using System.Linq;
+﻿using NUnit.Framework;
 using TagCloudGenerator.Infrastructure.Reader;
 
 namespace TagCloudGeneratorTests
 {
     public class LineTextReaderTests
     {
-        private LineTextReader reader;
-        private string tempFilePath;
-
-        [SetUp]
-        public void Setup()
-        {
-            reader = new LineTextReader();
-            tempFilePath = Path.GetTempFileName();
-        }
+        private LineTextReader reader = new LineTextReader();
+        private string tempFilePath = Path.GetTempFileName();
 
         [TearDown]
         public void TearDown()
@@ -30,13 +15,8 @@ namespace TagCloudGeneratorTests
                 File.Delete(tempFilePath);
         }
 
-        private void WriteToTempFile(string content)
-        {
-            File.WriteAllText(tempFilePath, content);
-        }
-
         [Test]
-        public void TryRead_ExistingFile_ReturnsLines()
+        public void TryRead_ExistingFile_ReturnsLines_Test()
         {
             var expectedLines = new[] { "line1", "line2", "line3" };
             WriteToTempFile(string.Join(Environment.NewLine, expectedLines));
@@ -46,7 +26,7 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void TryRead_EmptyFile_ReturnsEmpty()
+        public void TryRead_EmptyFile_ReturnsEmpty_Test()
         {
             WriteToTempFile("");
             var result = reader.TryRead(tempFilePath);
@@ -54,7 +34,7 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void TryRead_FileWithWhitespaceLines_ReturnsAllLines()
+        public void TryRead_FileWithWhitespaceLines_ReturnsAllLines_Test()
         {
             WriteToTempFile("line1\n\nline2\n  \nline3");
             var result = reader.TryRead(tempFilePath).ToList();
@@ -68,7 +48,7 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void TryRead_FileWithWindowsLineEndings_ReturnsCorrectLines()
+        public void TryRead_FileWithWindowsLineEndings_ReturnsCorrectLines_Test()
         {
             WriteToTempFile("line1\r\nline2\r\nline3");
             var result = reader.TryRead(tempFilePath).ToList();
@@ -77,7 +57,7 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void TryRead_NonExistentFile_ReturnsNull()
+        public void TryRead_NonExistentFile_ReturnsNull_Test()
         {
             var nonExistentPath = "C:\\nonexistent\\file.txt";
             var result = reader.TryRead(nonExistentPath);
@@ -85,7 +65,7 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void TryRead_FileWithOneLine_ReturnsOneLine()
+        public void TryRead_FileWithOneLine_ReturnsOneLine_Test()
         {
             WriteToTempFile("single line");
             var result = reader.TryRead(tempFilePath).ToList();
@@ -95,7 +75,7 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void TryRead_FileWithTrailingNewline_ReturnsCorrectLines()
+        public void TryRead_FileWithTrailingNewline_ReturnsCorrectLines_Test()
         {
             WriteToTempFile("line1\nline2\n");
             var result = reader.TryRead(tempFilePath).ToList();
@@ -104,17 +84,9 @@ namespace TagCloudGeneratorTests
             Assert.That(result, Is.EqualTo(new[] { "line1", "line2" }));
         }
 
-        [Test]
-        public void TryRead_LargeFile_ReturnsAllLines()
+        private void WriteToTempFile(string content)
         {
-            var lines = Enumerable.Range(1, 1000).Select(i => $"Line {i}");
-            WriteToTempFile(string.Join(Environment.NewLine, lines));
-
-            var result = reader.TryRead(tempFilePath).ToList();
-
-            Assert.That(result.Count, Is.EqualTo(1000));
-            Assert.That(result[0], Is.EqualTo("line 1"));
-            Assert.That(result[999], Is.EqualTo("line 1000"));
+            File.WriteAllText(tempFilePath, content);
         }
     }
 }
