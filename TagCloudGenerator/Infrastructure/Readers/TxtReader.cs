@@ -1,9 +1,14 @@
 ﻿using TagCloudGenerator.Core.Interfaces;
 
-namespace TagCloudGenerator.Infrastructure.Reader
+namespace TagCloudGenerator.Infrastructure.Readers
 {
-    public class LineTextReader : IReader
+    public class TxtReader : IFormatReader
     {
+        public bool CanRead(string filePath)
+        {
+            return Path.GetExtension(filePath).Equals(".txt", StringComparison.OrdinalIgnoreCase);
+        }
+
         public List<string> TryRead(string filePath)
         {
             try

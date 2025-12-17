@@ -1,17 +1,29 @@
 ﻿using CommandLine;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
 
-namespace TagCloudGenerator.Clients
+namespace TagCloudConsoleClient
 {
     public class ConsoleClient : IClient
     {
         private readonly ITagCloudGenerator _generator;
+        private readonly IEnumerable<IFilter> _filters;
+        private readonly IReader _reader;
+        private readonly INormalizer _normalizer;
 
-        public ConsoleClient(ITagCloudGenerator generator)
+        public ConsoleClient(ITagCloudGenerator generator, IEnumerable<IFilter> filters, IReader reader, INormalizer normalizer)
         {
             _generator = generator;
+            _filters = filters;
+            _reader = reader;
+            _normalizer = normalizer;
         }
 
         public void Run(string[] args)
@@ -32,7 +44,6 @@ namespace TagCloudGenerator.Clients
             var canvasSettings = new CanvasSettings()
                 .SetSize(opts.Width, opts.Height)
                 .SetBackgroundColor(TryParseColor(opts.BackgroundColor))
-                .WithCenterCloud()
                 .WithShowRectangles()
                 .SetPadding(opts.Padding);
 
@@ -50,7 +61,10 @@ namespace TagCloudGenerator.Clients
 
             try
             {
-                _generator.Generate(inputFile, outputFile, canvasSettings, textSettings);
+                var words = _normalizer.Normalize(_reader.TryRead(inputFile));
+                var image = _generator.Generate(words, canvasSettings, textSettings, _filters);
+
+                if(image != null) image.Save(outputFile, ImageFormat.Png);
                 Console.WriteLine("Tag cloud generation completed successfully!");
             }
             catch (Exception ex)
@@ -59,7 +73,7 @@ namespace TagCloudGenerator.Clients
             }
         }
 
-        private static Color? TryParseColor(string? colorStr)
+        private static Color? TryParseColor(string colorStr)
         {
             if (string.IsNullOrWhiteSpace(colorStr))
                 return null;

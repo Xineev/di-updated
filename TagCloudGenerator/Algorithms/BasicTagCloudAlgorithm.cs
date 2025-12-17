@@ -91,5 +91,10 @@ namespace TagCloudGenerator.Algorithms
             return this;
         }
 
+        public BasicTagCloudAlgorithm Reset()
+        {
+            rectangles.Clear();
+            return this;
+        }
     }
 }

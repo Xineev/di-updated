@@ -1,11 +1,11 @@
 ﻿using NUnit.Framework;
-using TagCloudGenerator.Infrastructure.Reader;
+using TagCloudGenerator.Infrastructure.Readers;
 
 namespace TagCloudGeneratorTests
 {
-    public class LineTextReaderTests
+    public class TxtReaderTests
     {
-        private LineTextReader reader = new LineTextReader();
+        private TxtReader reader = new TxtReader();
         private string tempFilePath = Path.GetTempFileName();
 
         [TearDown]

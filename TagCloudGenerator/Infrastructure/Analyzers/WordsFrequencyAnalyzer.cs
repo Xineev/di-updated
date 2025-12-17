@@ -6,28 +6,26 @@ namespace TagCloudGenerator.Infrastructure.Analyzers
 {
     public class WordsFrequencyAnalyzer : IAnalyzer
     {
-        public List<CloudItem> Analyze(List<string> words)
+        public List<(string Word, int Frequency)> Analyze(List<string> words)
         {
+            var wordFreqDictionary = new Dictionary<string, int>();
+
             if (words == null || words.Count == 0)
-                return new List<CloudItem>();
+                return new List<(string word, int freq)>();
 
-            var wordGroups = words
-                .GroupBy(word => word)
-                .Select(group => new { Word = group.Key, Frequency = group.Count() })
-                .OrderByDescending(x => x.Frequency);
+            foreach (string word in words) 
+            {
+                if (!wordFreqDictionary.ContainsKey(word)) wordFreqDictionary.Add(word, 1);
+                else wordFreqDictionary[word]++;
+            }
 
-            if (wordGroups.Count() == 0)
-                return new List<CloudItem>();
+            var result = wordFreqDictionary
+                 .OrderByDescending(pair => pair.Value)
+                 .ThenBy(pair => pair.Key)
+                 .Select(pair => (pair.Key, pair.Value))
+                 .ToList();
 
-            var maxFreq = wordGroups.Max(g => g.Frequency);
-
-            return wordGroups.Select(group => new CloudItem(
-                word: group.Word,
-                rectangle: Rectangle.Empty,
-                fontSize: 0,
-                frequency: group.Frequency,
-                weight: (double)group.Frequency / maxFreq
-                )).ToList();
+            return result;
         }
     }
 }

@@ -4,34 +4,38 @@ namespace TagCloudGenerator.Core.Models
 {
     public class CanvasSettings
     {
-        public Color BackgroundColor { get; set; } = Color.White;
-        public Size CanvasSize { get; set; } = new Size(1000, 1000);
-        public bool CenterCloud { get; set; } = true;
-        public bool ShowRectangles { get; set; } = true;
-        public int Padding { get; set; } = 50;
+        public Color BackgroundColor { get; private set; } = Color.White;
+        public Size CanvasSize { get; private set; } = new Size(1000, 1000);
+        public bool ShowRectangles { get; private set; } = true;
+        public int EdgePadding { get; private set; } = 50;
 
         public CanvasSettings SetWidth(int? width)
         {
-            if (width.HasValue && width > 0)
-                CanvasSize = new Size(width.Value, CanvasSize.Height);
+            var size = CanvasSize;
+
+            size.Width = width is > 0 ? width.Value : CanvasSize.Width;
+            CanvasSize = size;
+
             return this;
         }
 
         public CanvasSettings SetHeight(int? height)
         {
-            if (height.HasValue && height > 0)
-                CanvasSize = new Size(CanvasSize.Width, height.Value);
+            var size = CanvasSize;
+
+            size.Height = height is > 0 ? height.Value : CanvasSize.Height;
+            CanvasSize = size;
+
             return this;
         }
 
         public CanvasSettings SetSize(int? width, int? height)
         {
-            if (width.HasValue && height.HasValue && width > 0 && height > 0)
-                CanvasSize = new Size(width.Value, height.Value);
-            else if (width.HasValue && width > 0)
-                CanvasSize = new Size(width.Value, CanvasSize.Height);
-            else if (height.HasValue && height > 0)
-                CanvasSize = new Size(CanvasSize.Width, height.Value);
+            var size = CanvasSize;
+
+            size.Width = width is > 0 ? width.Value : CanvasSize.Width;
+            size.Height = height is > 0 ? height.Value : CanvasSize.Height;
+            CanvasSize = size;
 
             return this;
         }
@@ -43,12 +47,6 @@ namespace TagCloudGenerator.Core.Models
             return this;
         }
 
-        public CanvasSettings WithCenterCloud(bool value = true)
-        {
-            CenterCloud = value;
-            return this;
-        }
-
         public CanvasSettings WithShowRectangles(bool value = true)
         {
             ShowRectangles = value;
@@ -57,8 +55,7 @@ namespace TagCloudGenerator.Core.Models
 
         public CanvasSettings SetPadding(int? padding)
         {
-            if (padding.HasValue && padding >= 0)
-                Padding = (int)padding;
+            EdgePadding = padding is >= 0 ? (int)padding.Value : EdgePadding;
             return this;
         }
     }

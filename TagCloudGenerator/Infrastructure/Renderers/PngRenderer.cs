@@ -7,16 +7,12 @@ namespace TagCloudGenerator.Infrastructure.Renderers
 {
     public class PngRenderer : IRenderer
     {
-        public void Render(IEnumerable<CloudItem> items, CanvasSettings canvasSettings, TextSettings textSettings, string outputFile)
+        public Bitmap Render(IEnumerable<CloudItem> items, CanvasSettings canvasSettings, TextSettings textSettings)
         {
             var itemsList = items.ToList();
-            if (items.Count() == 0)
-            {
-                Console.WriteLine("No elements to render");
-                return;
-            }
 
-            using var bitmap = new Bitmap(canvasSettings.CanvasSize.Width, canvasSettings.CanvasSize.Height);
+            var bitmap = new Bitmap(canvasSettings.CanvasSize.Width, canvasSettings.CanvasSize.Height);
+
             using var graphics = Graphics.FromImage(bitmap);
 
             ConfigureGraphics(graphics);
@@ -33,16 +29,13 @@ namespace TagCloudGenerator.Infrastructure.Renderers
                 DrawCloudItem(graphics, item, offsetX, offsetY, canvasSettings, textSettings, brush, pen, stringFormat);
             }
 
-            bitmap.Save(outputFile, ImageFormat.Png);
+            return bitmap;
         }
 
         private (int offsetX, int offsetY) CalculateOffset(
             List<CloudItem> items,
             CanvasSettings settings)
         {
-            if (!settings.CenterCloud)
-                return (settings.Padding, settings.Padding);
-
             var minX = items.Min(i => i.Rectangle.X);
             var minY = items.Min(i => i.Rectangle.Y);
             var maxX = items.Max(i => i.Rectangle.Right);
@@ -74,7 +67,7 @@ namespace TagCloudGenerator.Infrastructure.Renderers
                 item.Rectangle.Width,
                 item.Rectangle.Height);
 
-            var color = item.Color ?? textSettings.TextColor;
+            var color = item.TextColor ?? textSettings.TextColor;
 
             using var font = new Font(
                 item.FontFamily,

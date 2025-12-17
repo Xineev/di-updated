@@ -7,17 +7,16 @@ namespace TagCloudGenerator.Core.Models
         public string Word { get; }
         public Rectangle Rectangle { get; }
         public float FontSize { get; }
-        public Color? Color { get; }
+        public Color? TextColor { get; }
         public string FontFamily { get; }
         public FontStyle FontStyle { get; }
         public int Frequency { get; }
-        public double Weight { get; }
 
         public CloudItem(
             string word,
             Rectangle rectangle,
             float fontSize,
-            Color? color = null,
+            Color? textColor = null,
             string fontFamily = "Arial",
             FontStyle fontStyle = FontStyle.Regular,
             int frequency = 1,
@@ -26,26 +25,25 @@ namespace TagCloudGenerator.Core.Models
             Word = word ?? throw new ArgumentNullException(nameof(word));
             Rectangle = rectangle;
             FontSize = fontSize;
-            Color = color;
+            TextColor = textColor;
             FontFamily = fontFamily ?? throw new ArgumentNullException(nameof(fontFamily));
             FontStyle = fontStyle;
             Frequency = frequency;
-            Weight = weight;
         }
 
         public CloudItem WithRectangle(Rectangle newRectangle)
         {
-            return new CloudItem(Word, newRectangle, FontSize, Color, FontFamily, FontStyle, Frequency, Weight);
+            return new CloudItem(Word, newRectangle, FontSize, TextColor, FontFamily, FontStyle, Frequency);
         }
 
         public CloudItem WithFontSize(float newFontSize)
         {
-            return new CloudItem(Word, Rectangle, newFontSize, Color, FontFamily, FontStyle, Frequency, Weight);
+            return new CloudItem(Word, Rectangle, newFontSize, TextColor, FontFamily, FontStyle, Frequency);
         }
 
         public CloudItem WithColor(Color newColor)
         {
-            return new CloudItem(Word, Rectangle, FontSize, newColor, FontFamily, FontStyle, Frequency, Weight);
+            return new CloudItem(Word, Rectangle, FontSize, newColor, FontFamily, FontStyle, Frequency);
         }
     }
 }

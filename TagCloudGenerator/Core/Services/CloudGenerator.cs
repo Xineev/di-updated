@@ -1,14 +1,14 @@
 ﻿using System.Drawing;
+using TagCloudGenerator.Algorithms;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
+using TagCloudGenerator.Infrastructure.Filters;
 
 namespace TagCloudGenerator.Core.Services
 {
     public class CloudGenerator : ITagCloudGenerator
     {
         private readonly ITagCloudAlgorithm _algorithm;
-        private readonly IReader _reader;
-        private readonly IEnumerable<IFilter> _filters;
         private readonly IAnalyzer _analyzer;
         private readonly IRenderer _renderer;
         private readonly IFontSizeCalculator _fontSizeCalculator;
@@ -16,16 +16,12 @@ namespace TagCloudGenerator.Core.Services
         private readonly Point _center;
 
         public CloudGenerator(ITagCloudAlgorithm algorithm, 
-            IReader reader, 
-            IEnumerable<IFilter> filters, 
             IAnalyzer analyzer, 
             IRenderer renderer,
             IFontSizeCalculator fontSizeCalculator,
             ITextMeasurer textMeasurer)
         {
-            _algorithm = algorithm;
-            _reader = reader;
-            _filters = filters;
+            this._algorithm = algorithm;
             _analyzer = analyzer;
             _renderer = renderer;
             _fontSizeCalculator = fontSizeCalculator;
@@ -33,37 +29,31 @@ namespace TagCloudGenerator.Core.Services
             _center = new Point(0, 0);
         }
 
-        public void Generate(string inputFile, string outputFile, CanvasSettings canvasSettings, TextSettings textSettings)
+        public Bitmap? Generate(List<string> words, CanvasSettings canvasSettings, TextSettings textSettings, IEnumerable<IFilter> filters)
         {
-            var words = _reader.TryRead(inputFile).ToList();
-            
-            if (words == null || words.Count == 0)
-                return;
+            words = ApplyFilters(words, filters);
+            if(words.Count == 0) return null;
 
-            words = ApplyFilters(words);
-            if(words.Count == 0)
-                return;
+            var wordsWithFreq = _analyzer.Analyze(words);
 
-            var cloudItems = _analyzer.Analyze(words).ToList();
+            var initializedItems = InitializeCloudItems(wordsWithFreq, textSettings).ToList();
 
-            var preparedItems = PrepareCloudItems(cloudItems, textSettings).ToList();
+            _algorithm.Reset();
 
-            var arrangedItems = ArrangeCloudItems(preparedItems).ToList();
-
-            _renderer.Render(arrangedItems, canvasSettings, textSettings, outputFile);
+            return _renderer.Render(initializedItems, canvasSettings, textSettings);
         }
 
-        private List<string> ApplyFilters(List<string> words)
+        private List<string> ApplyFilters(List<string> words, IEnumerable<IFilter> filters)
         {
             var filteredWords = words;
-            foreach (var filter in _filters)
+            foreach (var filter in filters)
             {
                 filteredWords = filter.Filter(filteredWords);
             }
             return filteredWords;
         }
 
-        private IEnumerable<CloudItem> PrepareCloudItems(IEnumerable<CloudItem> items, TextSettings settings)
+        private IEnumerable<CloudItem> InitializeCloudItems(IEnumerable<(string Word, int Frequency)> items, TextSettings settings)
         {
             var itemsList = new List<CloudItem>();
 
@@ -84,24 +74,19 @@ namespace TagCloudGenerator.Core.Services
                     fontSize,
                     settings.FontFamily);
 
+                var itemRectangle = _algorithm.PutNextRectangle(textSize);
+
                 itemsList.Add(
                     new CloudItem(
                         word: item.Word,
-                        rectangle: new Rectangle(Point.Empty, textSize),
+                        rectangle: itemRectangle,
                         fontSize: fontSize,
-                        color: settings.TextColor,
+                        textColor: settings.TextColor,
                         fontFamily: settings.FontFamily,
-                        frequency: item.Frequency,
-                        weight: item.Weight
+                        frequency: item.Frequency
                         ));
             }
             return itemsList;
-        }
-
-        private List<CloudItem> ArrangeCloudItems(List<CloudItem> items)
-        {
-            return items.Select(item => item.WithRectangle(_algorithm.PutNextRectangle(item.Rectangle.Size)))
-                .ToList();
         }
     }
 }

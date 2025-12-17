@@ -1,9 +1,9 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.DI;
+using TagCloudGenerator.Infrastructure.Filters;
 
-namespace TagCloudGenerator
+namespace TagCloudConsoleClient
 {
     public class Program
     {
@@ -12,6 +12,8 @@ namespace TagCloudGenerator
             var builder = new ContainerBuilder();
 
             builder.RegisterModule<TagCloudModule>();
+            builder.RegisterType<BoringWordsFilter>().As<IFilter>();
+            builder.RegisterType<ConsoleClient>().As<IClient>();
 
             var container = builder.Build();
 

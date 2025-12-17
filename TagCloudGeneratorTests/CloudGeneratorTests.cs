@@ -10,7 +10,6 @@ namespace TagCloudGeneratorTests
     public class CloudGeneratorTests
     {
         private Mock<ITagCloudAlgorithm> algorithmMock;
-        private Mock<IReader> readerMock;
         private Mock<IFilter> filterMock;
         private Mock<IAnalyzer> analyzerMock;
         private Mock<IRenderer> rendererMock;
@@ -22,7 +21,6 @@ namespace TagCloudGeneratorTests
         public void Setup()
         {
             algorithmMock = new Mock<ITagCloudAlgorithm>();
-            readerMock = new Mock<IReader>();
             filterMock = new Mock<IFilter>();
             analyzerMock = new Mock<IAnalyzer>();
             rendererMock = new Mock<IRenderer>();
@@ -31,8 +29,6 @@ namespace TagCloudGeneratorTests
 
             cloudGenerator = new CloudGenerator(
                 algorithmMock.Object,
-                readerMock.Object,
-                new[] { filterMock.Object },
                 analyzerMock.Object,
                 rendererMock.Object,
                 fontSizeCalculatorMock.Object,
@@ -40,77 +36,109 @@ namespace TagCloudGeneratorTests
         }
 
         [Test]
-        public void Generate_EmptyFile_DoesNothing_Test()
+        public void Generate_EmptyWords_ReturnsNull_AndDoesNotRender_Test()
         {
-            readerMock.Setup(r => r.TryRead(It.IsAny<string>())).Returns(new List<string>());
+            filterMock
+                .Setup(f => f.Filter(It.IsAny<List<string>>()))
+                .Returns(new List<string>());
 
-            cloudGenerator.Generate("input.txt", "output.png", new CanvasSettings(), new TextSettings());
+            var result = cloudGenerator.Generate(
+                new List<string>(),
+                new CanvasSettings(),
+                new TextSettings(),
+                new[] { filterMock.Object });
+
+            Assert.IsNull(result);
 
             rendererMock.Verify(r => r.Render(
                 It.IsAny<IEnumerable<CloudItem>>(),
                 It.IsAny<CanvasSettings>(),
-                It.IsAny<TextSettings>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<TextSettings>()),
+                Times.Never);
         }
 
         [Test]
-        public void Generate_AllWordsFilteredOut_DoesNothing_Test()
+        public void Generate_AllWordsFilteredOut_ReturnsNull_Test()
         {
             var words = new List<string> { "in", "a", "for" };
-            readerMock.Setup(r => r.TryRead(It.IsAny<string>())).Returns(words);
-            filterMock.Setup(f => f.Filter(It.IsAny<List<string>>())).Returns(new List<string>());
 
-            cloudGenerator.Generate("input.txt", "output.png", new CanvasSettings(), new TextSettings());
+            filterMock
+                .Setup(f => f.Filter(words))
+                .Returns(new List<string>());
+
+            var result = cloudGenerator.Generate(
+                words,
+                new CanvasSettings(),
+                new TextSettings(),
+                new[] { filterMock.Object });
+
+            Assert.IsNull(result);
 
             rendererMock.Verify(r => r.Render(
                 It.IsAny<IEnumerable<CloudItem>>(),
                 It.IsAny<CanvasSettings>(),
-                It.IsAny<TextSettings>(),
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<TextSettings>()),
+                Times.Never);
         }
 
         [Test]
         public void Generate_NormalFlow_CallsAllDependencies_Test()
         {
-            var words = new List<string> { "hello", "world", "test" };
-            var filteredWords = new List<string> { "hello", "world", "test" };
-            var cloudItems = new List<CloudItem>
-            {
-                new CloudItem("hello", Rectangle.Empty, 0, frequency: 2),
-                new CloudItem("world", Rectangle.Empty, 0, frequency: 1)
-            };
+            var words = new List<string> { "hello", "world", "hello" };
+            var filteredWords = new List<string> { "hello", "world", "hello" };
 
-            readerMock.Setup(r => r.TryRead("input.txt")).Returns(words);
-            filterMock.Setup(f => f.Filter(words)).Returns(filteredWords);
-            analyzerMock.Setup(a => a.Analyze(filteredWords)).Returns(cloudItems);
+            var analyzed = new List<(string Word, int Frequency)> { ("hello", 2), ("world", 1) };
 
-            var textSettings = new TextSettings
-            {
-                FontFamily = "Arial",
-                MinFontSize = 12f,
-                MaxFontSize = 72f,
-                TextColor = Color.Black
-            };
+            filterMock
+                .Setup(f => f.Filter(words))
+                .Returns(filteredWords);
 
-            fontSizeCalculatorMock.Setup(f => f.Calculate(2, 1, 2, 12f, 72f)).Returns(50f);
-            fontSizeCalculatorMock.Setup(f => f.Calculate(1, 1, 2, 12f, 72f)).Returns(20f);
+            analyzerMock
+                .Setup(a => a.Analyze(filteredWords))
+                .Returns(analyzed);
 
-            textMeasurerMock.Setup(t => t.Measure("hello", 50f, "Arial")).Returns(new Size(100, 30));
-            textMeasurerMock.Setup(t => t.Measure("world", 20f, "Arial")).Returns(new Size(80, 25));
+            var textSettings = new TextSettings()
+                .SetFontFamily("Arial")
+                .SetFontSizeRange(12, 72);
 
-            algorithmMock.Setup(a => a.PutNextRectangle(new Size(100, 30))).Returns(new Rectangle(0, 0, 100, 30));
-            algorithmMock.Setup(a => a.PutNextRectangle(new Size(80, 25))).Returns(new Rectangle(100, 0, 80, 25));
+            fontSizeCalculatorMock
+                .Setup(f => f.Calculate(2, 1, 2, 12f, 72f))
+                .Returns(50f);
 
-            cloudGenerator.Generate("input.txt", "output.png", new CanvasSettings(), textSettings);
+            fontSizeCalculatorMock
+                .Setup(f => f.Calculate(1, 1, 2, 12f, 72f))
+                .Returns(20f);
 
-            readerMock.Verify(r => r.TryRead("input.txt"), Times.Once);
+            textMeasurerMock
+                .Setup(t => t.Measure("hello", 50f, "Arial"))
+                .Returns(new Size(100, 30));
+
+            textMeasurerMock
+                .Setup(t => t.Measure("world", 20f, "Arial"))
+                .Returns(new Size(80, 25));
+
+            algorithmMock
+                .Setup(a => a.PutNextRectangle(It.IsAny<Size>()))
+                .Returns(new Rectangle(0, 0, 100, 30));
+
+            rendererMock
+                .Setup(r => r.Render(
+                    It.IsAny<IEnumerable<CloudItem>>(),
+                    It.IsAny<CanvasSettings>(),
+                    It.IsAny<TextSettings>()))
+                .Returns(new Bitmap(1, 1));
+
+            var result = cloudGenerator.Generate(
+                words,
+                new CanvasSettings(),
+                textSettings,
+                new[] { filterMock.Object });
+
+            Assert.IsNotNull(result);
+
             filterMock.Verify(f => f.Filter(words), Times.Once);
             analyzerMock.Verify(a => a.Analyze(filteredWords), Times.Once);
-
-            fontSizeCalculatorMock.Verify(f =>
-                f.Calculate(It.IsAny<int>(), 1, 2, 12f, 72f), Times.Exactly(2));
-            textMeasurerMock.Verify(t =>
-                t.Measure(It.IsAny<string>(), It.IsAny<float>(), "Arial"), Times.Exactly(2));
+            algorithmMock.Verify(a => a.Reset(), Times.Once);
             algorithmMock.Verify(a => a.PutNextRectangle(It.IsAny<Size>()), Times.Exactly(2));
 
             rendererMock.Verify(r => r.Render(
@@ -118,9 +146,10 @@ namespace TagCloudGeneratorTests
                 It.IsAny<CanvasSettings>(),
                 It.Is<TextSettings>(ts =>
                     ts.FontFamily == "Arial" &&
-                    ts.MinFontSize == 12f &&
-                    ts.MaxFontSize == 72f),
-                "output.png"), Times.Once);
+                    Math.Abs(ts.MinFontSize - 12) < float.Epsilon &&
+                    Math.Abs(ts.MaxFontSize - 72) < float.Epsilon)),
+                Times.Once);
         }
+
     }
 }

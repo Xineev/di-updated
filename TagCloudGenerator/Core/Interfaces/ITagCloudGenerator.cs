@@ -1,9 +1,10 @@
-﻿using TagCloudGenerator.Core.Models;
+﻿using System.Drawing;
+using TagCloudGenerator.Core.Models;
 
 namespace TagCloudGenerator.Core.Interfaces
 {
     public interface ITagCloudGenerator
     {
-        public void Generate(string inputFile, string outputFile, CanvasSettings canvasSettings, TextSettings textSettings);
+        public Bitmap? Generate(List<string> words, CanvasSettings canvasSettings, TextSettings textSettings, IEnumerable<IFilter> filters);
     }
 }

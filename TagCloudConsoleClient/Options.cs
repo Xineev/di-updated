@@ -1,6 +1,12 @@
-﻿using CommandLine;
+﻿using CommandLine.Text;
+using CommandLine;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace TagCloudGenerator.Clients
+namespace TagCloudConsoleClient
 {
     public class Options
     {

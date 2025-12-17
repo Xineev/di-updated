@@ -1,13 +1,13 @@
 ﻿using Autofac;
 using TagCloudGenerator.Algorithms;
-using TagCloudGenerator.Clients;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Services;
 using TagCloudGenerator.Infrastructure.Analyzers;
 using TagCloudGenerator.Infrastructure.Calculators;
 using TagCloudGenerator.Infrastructure.Filters;
 using TagCloudGenerator.Infrastructure.Measurers;
-using TagCloudGenerator.Infrastructure.Reader;
+using TagCloudGenerator.Infrastructure.Normalizers;
+using TagCloudGenerator.Infrastructure.Readers;
 using TagCloudGenerator.Infrastructure.Renderers;
 
 namespace TagCloudGenerator.DI
@@ -16,10 +16,14 @@ namespace TagCloudGenerator.DI
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<LineTextReader>().As<IReader>();
+            builder.RegisterType<TxtReader>().As<IFormatReader>().SingleInstance();
+            builder.RegisterType<DocxReader>().As<IFormatReader>().SingleInstance();
 
-            builder.RegisterType<BoringWordsFilter>().As<IFilter>();
-            builder.RegisterType<ToLowerCaseFilter>().As<IFilter>();
+            builder.RegisterType<CompositeReader>()
+                   .As<IReader>()
+                   .SingleInstance();
+
+            builder.RegisterType<LowerCaseNormalizer>().As<INormalizer>();
 
             builder.RegisterType<BasicTagCloudAlgorithm>().As<ITagCloudAlgorithm>();
 
@@ -31,8 +35,6 @@ namespace TagCloudGenerator.DI
 
             builder.RegisterType<WordsFrequencyAnalyzer>()
                .As<IAnalyzer>();
-
-            builder.RegisterType<ConsoleClient>().As<IClient>();
 
             builder.RegisterType<PngRenderer>().As<IRenderer>();
 
