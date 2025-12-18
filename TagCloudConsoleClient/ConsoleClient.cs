@@ -1,11 +1,6 @@
 ﻿using CommandLine;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
 
@@ -15,14 +10,14 @@ namespace TagCloudConsoleClient
     {
         private readonly ITagCloudGenerator _generator;
         private readonly IEnumerable<IFilter> _filters;
-        private readonly IReader _reader;
+        private readonly IReaderRepository _readersRepository;
         private readonly INormalizer _normalizer;
 
-        public ConsoleClient(ITagCloudGenerator generator, IEnumerable<IFilter> filters, IReader reader, INormalizer normalizer)
+        public ConsoleClient(ITagCloudGenerator generator, IEnumerable<IFilter> filters, IReaderRepository readers, INormalizer normalizer)
         {
             _generator = generator;
             _filters = filters;
-            _reader = reader;
+            _readersRepository = readers;
             _normalizer = normalizer;
         }
 
@@ -61,10 +56,14 @@ namespace TagCloudConsoleClient
 
             try
             {
-                var words = _normalizer.Normalize(_reader.TryRead(inputFile));
+                var reader = _readersRepository.TryGetReader(inputFile);
+
+                var words = _normalizer.Normalize(reader.TryRead(inputFile));
                 var image = _generator.Generate(words, canvasSettings, textSettings, _filters);
 
                 if(image != null) image.Save(outputFile, ImageFormat.Png);
+                image.Dispose();
+
                 Console.WriteLine("Tag cloud generation completed successfully!");
             }
             catch (Exception ex)

@@ -8,14 +8,9 @@ namespace TagCloudGenerator.Infrastructure.Filters
 
         public BoringWordsFilter() { }
 
-        public BoringWordsFilter(string[] words) 
+        public BoringWordsFilter(IEnumerable<string> words) 
         {
-            boringWords = words;
-        }
-
-        public BoringWordsFilter(List<string> wordsList)
-        {
-            boringWords = wordsList.ToArray();
+            boringWords = words.ToArray();
         }
 
         public List<string> Filter(List<string> words)

@@ -6,12 +6,12 @@ namespace TagCloudGenerator.Infrastructure.Analyzers
 {
     public class WordsFrequencyAnalyzer : IAnalyzer
     {
-        public List<(string Word, int Frequency)> Analyze(List<string> words)
+        public Dictionary<string, int> Analyze(List<string> words)
         {
             var wordFreqDictionary = new Dictionary<string, int>();
 
             if (words == null || words.Count == 0)
-                return new List<(string word, int freq)>();
+                return new Dictionary<string, int>();
 
             foreach (string word in words) 
             {
@@ -19,13 +19,7 @@ namespace TagCloudGenerator.Infrastructure.Analyzers
                 else wordFreqDictionary[word]++;
             }
 
-            var result = wordFreqDictionary
-                 .OrderByDescending(pair => pair.Value)
-                 .ThenBy(pair => pair.Key)
-                 .Select(pair => (pair.Key, pair.Value))
-                 .ToList();
-
-            return result;
+            return wordFreqDictionary;
         }
     }
 }

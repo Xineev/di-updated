@@ -9,6 +9,7 @@ using TagCloudGenerator.Infrastructure.Measurers;
 using TagCloudGenerator.Infrastructure.Normalizers;
 using TagCloudGenerator.Infrastructure.Readers;
 using TagCloudGenerator.Infrastructure.Renderers;
+using TagCloudGenerator.Infrastructure.Sorterers;
 
 namespace TagCloudGenerator.DI
 {
@@ -19,9 +20,11 @@ namespace TagCloudGenerator.DI
             builder.RegisterType<TxtReader>().As<IFormatReader>().SingleInstance();
             builder.RegisterType<DocxReader>().As<IFormatReader>().SingleInstance();
 
-            builder.RegisterType<CompositeReader>()
-                   .As<IReader>()
+            builder.RegisterType<ReaderRepository>()
+                   .As<IReaderRepository>()
                    .SingleInstance();
+
+            builder.RegisterType<FrequencyDescendingSorterer>().As<ISorterer>().SingleInstance();
 
             builder.RegisterType<LowerCaseNormalizer>().As<INormalizer>();
 

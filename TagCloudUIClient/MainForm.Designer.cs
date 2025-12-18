@@ -13,7 +13,7 @@ namespace TagCloudUIClient
         private System.ComponentModel.IContainer components = null;
 
         private readonly ITagCloudGenerator _generator;
-        private readonly IReader _reader;
+        private readonly IReaderRepository _readersRepository;
         private readonly INormalizer _normalizer;
         private string _lastOutputPath = string.Empty;
 
@@ -42,10 +42,10 @@ namespace TagCloudUIClient
         private Button btnSave;
 
 
-        public MainForm(ITagCloudGenerator generator, IReader reader, INormalizer normalizer)
+        public MainForm(ITagCloudGenerator generator, IReaderRepository readers, INormalizer normalizer)
         {
             _generator = generator;
-            _reader = reader;
+            _readersRepository = readers;
             _normalizer = normalizer;
             InitializeComponent();
         }
@@ -64,9 +64,20 @@ namespace TagCloudUIClient
         private void LoadExcludedWords(string path)
         {
             clbExcludedWords.Items.Clear();
-
-            var words = _reader.TryRead(path);
-            wordsToRender = _normalizer.Normalize(words);
+            try
+            {
+                var reader = _readersRepository.TryGetReader(path);
+                var words = reader.TryRead(path);
+                wordsToRender = _normalizer.Normalize(words);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(
+                   $"Ошибка чтения: {ex.Message}",
+                   "Формат файла не поддерживается",
+                   MessageBoxButtons.OK,
+                   MessageBoxIcon.Error);
+            }
 
             var text = File.ReadAllText(path);
             var distinctWords = wordsToRender.Distinct().OrderBy(w => w);

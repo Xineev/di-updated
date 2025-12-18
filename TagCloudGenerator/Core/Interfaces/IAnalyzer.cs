@@ -4,6 +4,6 @@ namespace TagCloudGenerator.Core.Interfaces
 {
     public interface IAnalyzer
     {
-        List<(string Word, int Frequency)> Analyze(List<string> words);
+        Dictionary<string, int> Analyze(List<string> words);
     }
 }

@@ -15,6 +15,7 @@ namespace TagCloudGeneratorTests
         private Mock<IRenderer> rendererMock;
         private Mock<IFontSizeCalculator> fontSizeCalculatorMock;
         private Mock<ITextMeasurer> textMeasurerMock;
+        private Mock<ISorterer> sortererMock;
         private CloudGenerator cloudGenerator;
 
         [SetUp]
@@ -26,13 +27,15 @@ namespace TagCloudGeneratorTests
             rendererMock = new Mock<IRenderer>();
             fontSizeCalculatorMock = new Mock<IFontSizeCalculator>();
             textMeasurerMock = new Mock<ITextMeasurer>();
+            sortererMock = new Mock<ISorterer>();
 
             cloudGenerator = new CloudGenerator(
                 algorithmMock.Object,
                 analyzerMock.Object,
                 rendererMock.Object,
                 fontSizeCalculatorMock.Object,
-                textMeasurerMock.Object);
+                textMeasurerMock.Object,
+                sortererMock.Object);
         }
 
         [Test]
@@ -87,7 +90,9 @@ namespace TagCloudGeneratorTests
             var words = new List<string> { "hello", "world", "hello" };
             var filteredWords = new List<string> { "hello", "world", "hello" };
 
-            var analyzed = new List<(string Word, int Frequency)> { ("hello", 2), ("world", 1) };
+            var analyzed = new Dictionary<string, int> { { "hello", 2 }, { "world", 1 } };
+
+            var sorted = new List<(string Word, int Frequency)> { ("hello", 2), ("world", 1) };
 
             filterMock
                 .Setup(f => f.Filter(words))
@@ -96,6 +101,10 @@ namespace TagCloudGeneratorTests
             analyzerMock
                 .Setup(a => a.Analyze(filteredWords))
                 .Returns(analyzed);
+
+            sortererMock
+                .Setup(s => s.Sort(analyzed))
+                .Returns(sorted);
 
             var textSettings = new TextSettings()
                 .SetFontFamily("Arial")
@@ -135,6 +144,8 @@ namespace TagCloudGeneratorTests
                 new[] { filterMock.Object });
 
             Assert.IsNotNull(result);
+
+            result.Dispose();
 
             filterMock.Verify(f => f.Filter(words), Times.Once);
             analyzerMock.Verify(a => a.Analyze(filteredWords), Times.Once);

@@ -16,6 +16,7 @@ namespace TagCloudGenerator.Infrastructure.Readers
             try
             {
                 using var doc = WordprocessingDocument.Open(filePath, false);
+                if (doc == null) return new List<string>();
 
                 return doc.MainDocumentPart.Document.Body
                     .Elements<Paragraph>()

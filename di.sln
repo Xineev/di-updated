@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagCloudGenerator", "TagClo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagCloudGeneratorTests", "TagCloudGeneratorTests\TagCloudGeneratorTests.csproj", "{235C2379-72BC-4BF2-994D-B5DA4146AB8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagCloudConsoleClient", "TagCloudConsoleClient\TagCloudConsoleClient.csproj", "{C8F88DBA-BFBC-4E4F-B305-E7EB928103AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TagCloudUIClient", "TagCloudUIClient\TagCloudUIClient.csproj", "{6415D8CF-C1CB-4B75-AA1D-C0207B79020C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +31,19 @@ Global
 		{235C2379-72BC-4BF2-994D-B5DA4146AB8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{235C2379-72BC-4BF2-994D-B5DA4146AB8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{235C2379-72BC-4BF2-994D-B5DA4146AB8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8F88DBA-BFBC-4E4F-B305-E7EB928103AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8F88DBA-BFBC-4E4F-B305-E7EB928103AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8F88DBA-BFBC-4E4F-B305-E7EB928103AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8F88DBA-BFBC-4E4F-B305-E7EB928103AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6415D8CF-C1CB-4B75-AA1D-C0207B79020C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6415D8CF-C1CB-4B75-AA1D-C0207B79020C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6415D8CF-C1CB-4B75-AA1D-C0207B79020C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6415D8CF-C1CB-4B75-AA1D-C0207B79020C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BFEBD95D-6AE8-4FB5-A3F5-52EAB5899DAC}
 	EndGlobalSection
 EndGlobal

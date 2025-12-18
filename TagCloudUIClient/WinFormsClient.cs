@@ -5,13 +5,13 @@ namespace TagCloudUIClient
     public class WinFormsClient : IClient
     {
         private readonly ITagCloudGenerator _generator;
-        private readonly IReader _reader;
+        private readonly IReaderRepository _reader;
         private readonly INormalizer _normalizer;
 
-        public WinFormsClient(ITagCloudGenerator generator, IReader reader, INormalizer normalizer)
+        public WinFormsClient(ITagCloudGenerator generator, IReaderRepository repository, INormalizer normalizer)
         {
             _generator = generator;
-            _reader = reader;
+            _reader = repository;
             _normalizer = normalizer;
         }
 

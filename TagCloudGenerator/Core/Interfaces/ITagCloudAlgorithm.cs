@@ -7,6 +7,6 @@ namespace TagCloudGenerator.Core.Interfaces
     {
         Rectangle PutNextRectangle(Size rectangleSize);
 
-        public BasicTagCloudAlgorithm Reset();
+        public ITagCloudAlgorithm Reset();
     }
 }

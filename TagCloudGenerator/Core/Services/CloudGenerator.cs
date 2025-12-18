@@ -13,19 +13,22 @@ namespace TagCloudGenerator.Core.Services
         private readonly IRenderer _renderer;
         private readonly IFontSizeCalculator _fontSizeCalculator;
         private readonly ITextMeasurer _textMeasurer;
+        private readonly ISorterer _sorterer;
         private readonly Point _center;
 
         public CloudGenerator(ITagCloudAlgorithm algorithm, 
             IAnalyzer analyzer, 
             IRenderer renderer,
             IFontSizeCalculator fontSizeCalculator,
-            ITextMeasurer textMeasurer)
+            ITextMeasurer textMeasurer,
+            ISorterer sorterer)
         {
             this._algorithm = algorithm;
             _analyzer = analyzer;
             _renderer = renderer;
             _fontSizeCalculator = fontSizeCalculator;
             _textMeasurer = textMeasurer;
+            _sorterer = sorterer;
             _center = new Point(0, 0);
         }
 
@@ -34,7 +37,7 @@ namespace TagCloudGenerator.Core.Services
             words = ApplyFilters(words, filters);
             if(words.Count == 0) return null;
 
-            var wordsWithFreq = _analyzer.Analyze(words);
+            var wordsWithFreq = _sorterer.Sort(_analyzer.Analyze(words));
 
             var initializedItems = InitializeCloudItems(wordsWithFreq, textSettings).ToList();
 
