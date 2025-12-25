@@ -15,7 +15,8 @@ namespace TagCloudGenerator.Infrastructure.Analyzers
 
             foreach (string word in words) 
             {
-                if (!wordFreqDictionary.ContainsKey(word)) wordFreqDictionary.Add(word, 1);
+                if(wordFreqDictionary.TryAdd(word, 1))
+                    continue;
                 else wordFreqDictionary[word]++;
             }
 

@@ -66,9 +66,15 @@ namespace TagCloudUIClient
             clbExcludedWords.Items.Clear();
             try
             {
-                var reader = _readersRepository.TryGetReader(path);
-                var words = reader.TryRead(path);
-                wordsToRender = _normalizer.Normalize(words);
+                if (_readersRepository.TryGetReader(path, out var outputReader))
+                {
+                    var words = outputReader.TryRead(path);
+                    wordsToRender = _normalizer.Normalize(words);
+                }
+                else
+                {
+                    throw new Exception("no suitable formate readers found");
+                }
             }
             catch(Exception ex)
             {

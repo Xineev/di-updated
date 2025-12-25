@@ -3,6 +3,6 @@ namespace TagCloudGenerator.Core.Interfaces
 {
     public interface IReaderRepository
     {
-        public IFormatReader TryGetReader(string filePath);
+        public bool TryGetReader(string filePath, out IFormatReader outputReader);
     }
 }

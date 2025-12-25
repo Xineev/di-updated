@@ -56,15 +56,20 @@ namespace TagCloudConsoleClient
 
             try
             {
-                var reader = _readersRepository.TryGetReader(inputFile);
+                if(_readersRepository.TryGetReader(inputFile, out var outputReader))
+                {
+                    var words = _normalizer.Normalize(outputReader.TryRead(inputFile));
+                    var image = _generator.Generate(words, canvasSettings, textSettings, _filters);
 
-                var words = _normalizer.Normalize(reader.TryRead(inputFile));
-                var image = _generator.Generate(words, canvasSettings, textSettings, _filters);
+                    if (image != null) image.Save(outputFile, ImageFormat.Png);
+                    image.Dispose();
 
-                if(image != null) image.Save(outputFile, ImageFormat.Png);
-                image.Dispose();
-
-                Console.WriteLine("Tag cloud generation completed successfully!");
+                    Console.WriteLine("Tag cloud generation completed successfully!");
+                }
+                else
+                {
+                    throw new Exception("no suitable formate readers found");
+                }
             }
             catch (Exception ex)
             {

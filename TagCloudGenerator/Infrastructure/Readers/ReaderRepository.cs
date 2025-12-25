@@ -16,13 +16,13 @@ namespace TagCloudGenerator.Infrastructure.Readers
             return _readers.Any(r => r.CanRead(filePath));
         }
 
-        public IFormatReader TryGetReader(string filePath)
+        public bool TryGetReader(string filePath, out IFormatReader outputReader)
         {
-            var reader = _readers.FirstOrDefault(r => r.CanRead(filePath));
-            if (reader == null)
-                throw new NotSupportedException("Формат не поддерживается");
+            outputReader = _readers.FirstOrDefault(r => r.CanRead(filePath));
+            if (outputReader == null)
+                return false;
 
-            return reader;
+            return true;
         }
     }
 }
