@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
+using TagCloudGenerator.Infrastructure;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TagCloudConsoleClient
 {
@@ -10,14 +12,14 @@ namespace TagCloudConsoleClient
     {
         private readonly ITagCloudGenerator _generator;
         private readonly IEnumerable<IFilter> _filters;
-        private readonly IReaderRepository _readersRepository;
+        private readonly IReaderRepository _readerRepository;
         private readonly INormalizer _normalizer;
 
         public ConsoleClient(ITagCloudGenerator generator, IEnumerable<IFilter> filters, IReaderRepository readers, INormalizer normalizer)
         {
             _generator = generator;
             _filters = filters;
-            _readersRepository = readers;
+            _readerRepository = readers;
             _normalizer = normalizer;
         }
 
@@ -54,27 +56,17 @@ namespace TagCloudConsoleClient
             Console.WriteLine($"Input file: {inputFile}");
             Console.WriteLine($"Output file: {outputFile}");
 
-            try
-            {
-                if(_readersRepository.TryGetReader(inputFile, out var outputReader))
-                {
-                    var words = _normalizer.Normalize(outputReader.TryRead(inputFile));
-                    var image = _generator.Generate(words, canvasSettings, textSettings, _filters);
 
-                    if (image != null) image.Save(outputFile, ImageFormat.Png);
-                    image.Dispose();
-
-                    Console.WriteLine("Tag cloud generation completed successfully!");
-                }
-                else
+            _readerRepository.TryGetReader(inputFile)
+                .Then(reader => reader.TryRead(inputFile))
+                .Then(words => _normalizer.Normalize(words))
+                .Then(words => _generator.Generate(words, canvasSettings, textSettings, _filters))
+                .Then(image => Result.OfAction(() => image.Save(outputFile, ImageFormat.Png), "Failed to save output image"))
+                .OnFail(error =>
                 {
-                    throw new Exception("no suitable formate readers found");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during generation: {ex.Message}");
-            }
+                    Console.WriteLine("Error during generation:");
+                    Console.WriteLine(error);
+                });
         }
 
         private static Color? TryParseColor(string colorStr)

@@ -7,29 +7,45 @@ namespace TagCloudGenerator.Infrastructure.Renderers
 {
     public class PngRenderer : IRenderer
     {
-        public Bitmap Render(IEnumerable<CloudItem> items, CanvasSettings canvasSettings, TextSettings textSettings)
+        public Result<Bitmap> Render(IEnumerable<CloudItem> items, CanvasSettings canvasSettings, TextSettings textSettings)
         {
+            if (items == null)
+                return Result.Fail<Bitmap>("Cloud items are null");
+
             var itemsList = items.ToList();
 
-            var bitmap = new Bitmap(canvasSettings.CanvasSize.Width, canvasSettings.CanvasSize.Height);
+            if (itemsList.Count == 0)
+                return Result.Fail<Bitmap>("Cloud items are empty");
 
-            using var graphics = Graphics.FromImage(bitmap);
+            if (canvasSettings.CanvasSize.Width <= 0 ||
+                canvasSettings.CanvasSize.Height <= 0)
+                return Result.Fail<Bitmap>("Invalid canvas size");
 
-            ConfigureGraphics(graphics);
-            graphics.Clear(canvasSettings.BackgroundColor);
+            var cloudBounds = CalculateCloudBounds(itemsList);
 
-            var (offsetX, offsetY) = CalculateOffset(itemsList, canvasSettings);
+            if (!FitsCanvas(cloudBounds, canvasSettings.CanvasSize))
+                return Result.Fail<Bitmap>(
+                    $"Tag cloud size ({cloudBounds.Width}x{cloudBounds.Height}) " +
+                    $"exceeds canvas size ({canvasSettings.CanvasSize.Width}x{canvasSettings.CanvasSize.Height})");
 
+            return Result.Of(() =>
+                {
+                    var bitmap = new Bitmap(canvasSettings.CanvasSize.Width, canvasSettings.CanvasSize.Height);
+                    using var graphics = Graphics.FromImage(bitmap);
 
-            using var brush = new SolidBrush(textSettings.TextColor);
-            using var stringFormat = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-            using var pen = new Pen(textSettings.TextColor, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash };
-            foreach (var item in itemsList)
-            {
-                DrawCloudItem(graphics, item, offsetX, offsetY, canvasSettings, textSettings, brush, pen, stringFormat);
-            }
+                    ConfigureGraphics(graphics);
+                    graphics.Clear(canvasSettings.BackgroundColor);
 
-            return bitmap;
+                    var (offsetX, offsetY) = CalculateOffset(itemsList, canvasSettings);
+
+                    using var brush = new SolidBrush(textSettings.TextColor);
+                    using var stringFormat = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    using var pen = new Pen(textSettings.TextColor, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash };
+
+                    foreach (var item in itemsList)
+                        DrawCloudItem(graphics, item, offsetX, offsetY, canvasSettings, textSettings, brush, pen, stringFormat);
+                    return bitmap;
+                }, "Failed to render tag cloud image");
         }
 
         private (int offsetX, int offsetY) CalculateOffset(
@@ -89,6 +105,22 @@ namespace TagCloudGenerator.Infrastructure.Renderers
             graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+        }
+
+        private Rectangle CalculateCloudBounds(List<CloudItem> items)
+        {
+            var minX = items.Min(i => i.Rectangle.Left);
+            var minY = items.Min(i => i.Rectangle.Top);
+            var maxX = items.Max(i => i.Rectangle.Right);
+            var maxY = items.Max(i => i.Rectangle.Bottom);
+
+            return Rectangle.FromLTRB(minX, minY, maxX, maxY);
+        }
+
+        private bool FitsCanvas(Rectangle cloudBounds, Size canvasSize)
+        {
+            return cloudBounds.Width <= canvasSize.Width
+                && cloudBounds.Height <= canvasSize.Height;
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System.Drawing.Imaging;
+using System.Drawing;
 using TagCloudGenerator.Core.Interfaces;
 using TagCloudGenerator.Core.Models;
+using TagCloudGenerator.Infrastructure;
 using TagCloudGenerator.Infrastructure.Filters;
 
 namespace TagCloudUIClient
@@ -13,7 +15,7 @@ namespace TagCloudUIClient
         private System.ComponentModel.IContainer components = null;
 
         private readonly ITagCloudGenerator _generator;
-        private readonly IReaderRepository _readersRepository;
+        private readonly IReaderRepository _readerRepository;
         private readonly INormalizer _normalizer;
         private string _lastOutputPath = string.Empty;
 
@@ -45,7 +47,7 @@ namespace TagCloudUIClient
         public MainForm(ITagCloudGenerator generator, IReaderRepository readers, INormalizer normalizer)
         {
             _generator = generator;
-            _readersRepository = readers;
+            _readerRepository = readers;
             _normalizer = normalizer;
             InitializeComponent();
         }
@@ -64,26 +66,21 @@ namespace TagCloudUIClient
         private void LoadExcludedWords(string path)
         {
             clbExcludedWords.Items.Clear();
-            try
-            {
-                if (_readersRepository.TryGetReader(path, out var outputReader))
-                {
-                    var words = outputReader.TryRead(path);
-                    wordsToRender = _normalizer.Normalize(words);
-                }
-                else
-                {
-                    throw new Exception("no suitable formate readers found");
-                }
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show(
-                   $"Ошибка чтения: {ex.Message}",
-                   "Формат файла не поддерживается",
-                   MessageBoxButtons.OK,
-                   MessageBoxIcon.Error);
-            }
+            _readerRepository.TryGetReader(path)
+                .Then(reader => reader.TryRead(path))
+                .Then(words => _normalizer.Normalize(words))
+                .OnSuccess(words =>
+                    {
+                        wordsToRender = words; 
+                    })
+                .OnFail(error => {
+                    MessageBox.Show(
+                        $"{error}",
+                        "Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                });
 
             var text = File.ReadAllText(path);
             var distinctWords = wordsToRender.Distinct().OrderBy(w => w);
@@ -152,29 +149,21 @@ namespace TagCloudUIClient
                 .SetMinFontSize((int)numMinSize.Value)
                 .SetTextColor(textColor);
 
-            try
-            {
-                var bitmap = _generator.Generate(
-                    wordsToRender,
-                    canvasSettings,
-                    textSettings,
-                    filters);
-
-                picturePreview.Image?.Dispose();
-
-                _generatedBitmap = bitmap;
-                picturePreview.Image = bitmap;
-
-                btnSave.Enabled = true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Ошибка генерации: {ex.Message}",
-                    "Генерация не удалась",
+            _generator.Generate(wordsToRender, canvasSettings, textSettings, filters)
+                .OnSuccess(bitmap =>
+                {
+                    picturePreview.Image?.Dispose();
+                    _generatedBitmap = bitmap;
+                    picturePreview.Image = bitmap;
+                    btnSave.Enabled = true;
+                })
+                .OnFail(error => {
+                    MessageBox.Show(
+                    $"Generation error: {error}",
+                    "Generation was not successful",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-            }
+                });
         }
 
 
@@ -364,7 +353,7 @@ namespace TagCloudUIClient
             numMaxSize.TabIndex = 7;
             numMaxSize.Value = new decimal(new int[] { 80, 0, 0, 0 });
             numMaxSize.ValueChanged += numMaxSize_ValueChanged;
-            // 
+            //
             // btnChooseFont
             // 
             btnChooseFont.Location = new Point(10, 135);

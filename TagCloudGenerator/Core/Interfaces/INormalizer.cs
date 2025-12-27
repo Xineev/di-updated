@@ -1,5 +1,4 @@
-﻿
-namespace TagCloudGenerator.Core.Interfaces
+﻿namespace TagCloudGenerator.Core.Interfaces
 {
     public interface INormalizer
     {
